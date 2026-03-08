@@ -6,6 +6,7 @@ from dagster_essentials.defs.partitions import monthly_partition
 
 
 @dg.asset(
+    group_name="raw_files",
     partitions_def=monthly_partition
 )
 def taxi_trips_file(context: dg.AssetExecutionContext) -> None:
@@ -22,7 +23,9 @@ def taxi_trips_file(context: dg.AssetExecutionContext) -> None:
         output_file.write(raw_trips.content)
 
 
-@dg.asset
+@dg.asset(
+    group_name="raw_files",
+)
 def taxi_zones_file() -> None:
     """
       The raw parquet files for the taxi trips dataset. Sourced from the NYC Open Data portal.
@@ -38,6 +41,7 @@ def taxi_zones_file() -> None:
 @dg.asset(
     deps=["taxi_trips_file"],
     partitions_def=monthly_partition,
+    group_name="ingested"
 )
 def taxi_trips(context: dg.AssetExecutionContext, database: DuckDBResource) -> None:
     """
@@ -69,6 +73,7 @@ def taxi_trips(context: dg.AssetExecutionContext, database: DuckDBResource) -> N
 
 @dg.asset(
     deps=["taxi_zones_file"],
+    group_name="ingested"
 )
 def taxi_zones(database: DuckDBResource) -> None:
     """
