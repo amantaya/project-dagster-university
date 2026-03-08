@@ -41,16 +41,23 @@ def taxi_trips_file(context) -> dg.MaterializeResult:
 @dg.asset(
     group_name="raw_files",
 )
-def taxi_zones_file() -> None:
+def taxi_zones_file() -> dg.MaterializeResult:
     """
-      The raw parquet files for the taxi trips dataset. Sourced from the NYC Open Data portal.
+      The raw CSV file for the taxi zones dataset. Sourced from the NYC Open Data portal.
     """
-    raw_trips = requests.get(
+    raw_taxi_zones = requests.get(
         "https://community-engineering-artifacts.s3.us-west-2.amazonaws.com/dagster-university/data/taxi_zones.csv"
     )
 
     with open(constants.TAXI_ZONES_FILE_PATH, "wb") as output_file:
-        output_file.write(raw_trips.content)
+        output_file.write(raw_taxi_zones.content)
+    num_rows = len(pd.read_csv(constants.TAXI_ZONES_FILE_PATH))
+
+    return dg.MaterializeResult(
+        metadata={
+            'Number of records': dg.MetadataValue.int(num_rows)
+        }
+    )
 
 
 @dg.asset(
